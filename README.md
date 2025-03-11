@@ -1,6 +1,6 @@
-Student Name: Bạch Đức Cảnh
-Student ID: 22110012
-Project: Dessert Clicker app
+### Student Name: Bạch Đức Cảnh
+### Student ID: 22110012
+### Project: Dessert Clicker app
 
 ## Clone this project to your computer/ Download .zip file and extract folder
 
