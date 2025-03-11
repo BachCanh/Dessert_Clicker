@@ -1,29 +1,24 @@
-Dessert Clicker app
-=====================
+Student Name: Bạch Đức Cảnh
+Student ID: 22110012
+Project: Dessert Clicker app
 
-Code for Android Basics with Compose Codelab.
+## Clone this project to your computer/ Download .zip file and extract folder
 
-Introduction
-------------
+![image](https://github.com/user-attachments/assets/c9495b51-c5a7-4de8-aadb-9c6d29524c15)
 
-Dessert Clicker is a game about making desserts.
+## Run Android Studio 
 
-Press the button, make a dessert, earn the big bucks.
+![image](https://github.com/user-attachments/assets/1323462c-d47d-4ae8-8e08-185013a59bbb)
 
-You use this app in the course to explore the Android lifecycle and log messages to
-the Android console (Logcat).
+## Open Project then wait for gradle run
 
-Pre-requisites
---------------
+![image](https://github.com/user-attachments/assets/8368f958-2819-49ca-83fd-8c4be7c1fbed)
 
-You need to know:
-- How to open, build, and run apps with Android Studio.
-- What an activity is, and how to create one in your app.
-- What the activity's onCreate() method does, and the kind of operations
-  that are performed in that method.
+## Run Project
 
+![image](https://github.com/user-attachments/assets/c657a148-b31f-4bef-9ed7-304df18844ca)
 
-Getting Started
----------------
+## Then get the result
 
-1. Download and run the app.
+![image](https://github.com/user-attachments/assets/24b509ab-e8a3-473a-997b-d7509cedea42)
+
