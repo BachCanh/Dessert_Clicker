@@ -21,6 +21,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.util.Size
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -53,6 +54,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -65,12 +67,17 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.example.dessertclicker.data.Datasource
 import com.example.dessertclicker.model.Dessert
+import com.example.dessertclicker.ui.DessertViewModel
 import com.example.dessertclicker.ui.theme.DessertClickerTheme
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 // Tag for logging
 private const val TAG = "MainActivity"
@@ -88,7 +95,7 @@ class MainActivity : ComponentActivity() {
                         .fillMaxSize()
                         .statusBarsPadding(),
                 ) {
-                    DessertClickerApp(desserts = Datasource.dessertList)
+                    DessertClickerApp()
                 }
             }
         }
@@ -128,25 +135,6 @@ class MainActivity : ComponentActivity() {
 /**
  * Determine which dessert to show.
  */
-fun determineDessertToShow(
-    desserts: List<Dessert>,
-    dessertsSold: Int
-): Dessert {
-    var dessertToShow = desserts.first()
-    for (dessert in desserts) {
-        if (dessertsSold >= dessert.startProductionAmount) {
-            dessertToShow = dessert
-        } else {
-            // The list of desserts is sorted by startProductionAmount. As you sell more desserts,
-            // you'll start producing more expensive desserts as determined by startProductionAmount
-            // We know to break as soon as we see a dessert who's "startProductionAmount" is greater
-            // than the amount sold.
-            break
-        }
-    }
-
-    return dessertToShow
-}
 
 /**
  * Share desserts sold information using ACTION_SEND intent
@@ -175,21 +163,8 @@ private fun shareSoldDessertsInformation(intentContext: Context, dessertsSold: I
 }
 
 @Composable
-private fun DessertClickerApp(
-    desserts: List<Dessert>
-) {
-
-    var revenue by rememberSaveable { mutableStateOf(0) }
-    var dessertsSold by rememberSaveable { mutableStateOf(0) }
-
-    val currentDessertIndex by rememberSaveable { mutableStateOf(0) }
-
-    var currentDessertPrice by rememberSaveable {
-        mutableStateOf(desserts[currentDessertIndex].price)
-    }
-    var currentDessertImageId by rememberSaveable {
-        mutableStateOf(desserts[currentDessertIndex].imageId)
-    }
+private fun DessertClickerApp(viewModel: DessertViewModel = viewModel()) {
+    val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(
         topBar = {
@@ -199,8 +174,8 @@ private fun DessertClickerApp(
                 onShareButtonClicked = {
                     shareSoldDessertsInformation(
                         intentContext = intentContext,
-                        dessertsSold = dessertsSold,
-                        revenue = revenue
+                        dessertsSold = uiState.dessertsSold,
+                        revenue = uiState.revenue
                     )
                 },
                 modifier = Modifier
@@ -216,24 +191,21 @@ private fun DessertClickerApp(
         }
     ) { contentPadding ->
         DessertClickerScreen(
-            revenue = revenue,
-            dessertsSold = dessertsSold,
-            dessertImageId = currentDessertImageId,
-            onDessertClicked = {
-
-                // Update the revenue
-                revenue += currentDessertPrice
-                dessertsSold++
-
-                // Show the next dessert
-                val dessertToShow = determineDessertToShow(desserts, dessertsSold)
-                currentDessertImageId = dessertToShow.imageId
-                currentDessertPrice = dessertToShow.price
+            revenue = uiState.revenue,
+            dessertsSold = uiState.dessertsSold,
+            firstDessert = uiState.firstDessert,
+            secondDessert = uiState.secondDessert,
+            onFirstDessertClicked = {
+                viewModel.onDessertClicked(uiState.firstDessert)
+            },
+            onSecondDessertClicked = {
+                viewModel.onDessertClicked(uiState.secondDessert)
             },
             modifier = Modifier.padding(contentPadding)
         )
     }
 }
+
 
 @Composable
 private fun DessertClickerAppBar(
@@ -268,8 +240,10 @@ private fun DessertClickerAppBar(
 fun DessertClickerScreen(
     revenue: Int,
     dessertsSold: Int,
-    @DrawableRes dessertImageId: Int,
-    onDessertClicked: () -> Unit,
+    firstDessert: Dessert,
+    secondDessert: Dessert,
+    onFirstDessertClicked: () -> Unit,
+    onSecondDessertClicked: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Box(modifier = modifier) {
@@ -279,20 +253,22 @@ fun DessertClickerScreen(
             contentScale = ContentScale.Crop
         )
         Column {
-            Box(
+            Row(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Image(
-                    painter = painterResource(dessertImageId),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .width(dimensionResource(R.dimen.image_size))
-                        .height(dimensionResource(R.dimen.image_size))
-                        .align(Alignment.Center)
-                        .clickable { onDessertClicked() },
-                    contentScale = ContentScale.Crop,
+                ImageWithPrice(
+                    firstDessert.imageId,
+                    firstDessert.price,
+                    onFirstDessertClicked
+                )
+                ImageWithPrice(
+                    secondDessert.imageId,
+                    secondDessert.price,
+                    onSecondDessertClicked
                 )
             }
             TransactionInfo(
@@ -301,6 +277,32 @@ fun DessertClickerScreen(
                 modifier = Modifier.background(MaterialTheme.colorScheme.secondaryContainer)
             )
         }
+    }
+}
+
+@Composable
+private fun ImageWithPrice(
+    @DrawableRes imageId: Int,
+    price: Int = 0,
+    onDessertClicked: () -> Unit,
+){
+    Column {
+        Image(
+            painter = painterResource(imageId),
+            contentDescription = null,
+            modifier = Modifier
+                .width(dimensionResource(R.dimen.image_size))
+                .height(dimensionResource(R.dimen.image_size))
+                .clickable { onDessertClicked() },
+            contentScale = ContentScale.Crop,
+        )
+        Text(
+            text = "$${price}",
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onSecondaryContainer,
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            fontSize = 30.sp
+        )
     }
 }
 
@@ -369,6 +371,6 @@ private fun DessertsSoldInfo(dessertsSold: Int, modifier: Modifier = Modifier) {
 @Composable
 fun MyDessertClickerAppPreview() {
     DessertClickerTheme {
-        DessertClickerApp(listOf(Dessert(R.drawable.cupcake, 5, 0)))
+        DessertClickerApp()
     }
 }
